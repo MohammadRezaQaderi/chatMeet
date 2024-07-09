@@ -118,6 +118,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (room && username) {
         location.href = `/room.html?room=${room}`;
     } else {
-        location.href = '/';
+        false
     }
 });

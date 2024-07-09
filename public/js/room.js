@@ -40,6 +40,7 @@ function fitToContainer(canvas) {
 }
 
 fitToContainer(canvas);
+// socket.emit("join room", roomid, username);
 
 //getCanvas call is under join room call
 socket.on('getCanvas', url => {
@@ -109,6 +110,42 @@ function drawRemote(newx, newy, oldx, oldy) {
 
 }
 
+// document.addEventListener('DOMContentLoaded', () => {
+//     const continueButt = document.querySelector('.continue-name');
+//     const nameField = document.querySelector('#name-field');
+//     const overlayContainer = document.querySelector('.overlay-container');
+//     const roomid = getRoomIdFromURL();
+//     let username = localStorage.getItem('username');
+
+//     // Check if username is already in localStorage
+//     if (username) {
+//         joinRoom(username);
+//     } else {
+//         // Display the overlay to prompt for username
+//         overlayContainer.style.visibility = 'visible';
+
+//         continueButt.addEventListener('click', () => {
+//             if (nameField.value == '') return;
+//             username = nameField.value;
+//             localStorage.setItem('username', username);
+//             joinRoom(username);
+//         });
+//     }
+
+//     function joinRoom(username) {
+//         overlayContainer.style.visibility = 'hidden';
+//         document.querySelector("#myname").innerHTML = `${username} (You)`;
+//         socket.emit("join room", roomid, username);
+//     }
+
+//     function getRoomIdFromURL() {
+//         // Extract the room id from the URL
+//         const urlParams = new URLSearchParams(window.location.search);
+//         return urlParams.get('room');
+//     }
+// });
+
+
 canvas.addEventListener('mousedown', e => {
     x = e.offsetX;
     y = e.offsetY;
@@ -164,7 +201,7 @@ let videoTrackSent = {};
 let mystream, myscreenshare;
 
 
-document.querySelector('.roomcode').innerHTML = `${roomid}`
+// document.querySelector('.roomcode').innerHTML = `${roomid}`
 
 function CopyClassText() {
 
