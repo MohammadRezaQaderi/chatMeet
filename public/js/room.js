@@ -688,5 +688,5 @@ whiteboardButt.addEventListener("click", () => {
 });
 
 cutCall.addEventListener("click", () => {
-  location.href = "/";
+  location.href = "https://www.daarolquran.com";
 });
