@@ -805,3 +805,93 @@ navbar .logo {
 }
 
 /*# sourceMappingURL=style.css.map */
+/* Ensure container flex direction is column on smaller devices */
+@media (max-width: 768px) {
+  .container-room {
+    flex-direction: column;
+  }
+
+  .left-cont,
+  .right-cont {
+    width: 100%;
+    padding: 20px;
+    height: auto;
+  }
+
+  .left-cont {
+    padding: 20px;
+  }
+
+  .video-cont {
+    grid-template-columns: 1fr;
+    grid-gap: 10px;
+  }
+
+  .video-box {
+    height: 50vh; /* Reduce the height for mobile screens */
+  }
+
+  .whiteboard-cont {
+    padding: 20px;
+    height: auto;
+  }
+
+  .colors-cont {
+    right: 20px;
+    top: 20px;
+  }
+
+  .footer {
+    margin-top: 20px;
+  }
+
+  .footer .utils {
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 5px;
+  }
+
+  .tooltip .tooltiptext {
+    font-size: 12px;
+    width: 100px;
+  }
+}
+
+/* Further adjustments for smaller devices like phones */
+@media (max-width: 480px) {
+  .left-cont {
+    padding: 10px;
+  }
+
+  .right-cont {
+    padding: 10px;
+  }
+
+  .whiteboard-cont {
+    padding: 10px;
+  }
+
+  .video-box {
+    height: 40vh; /* Further reduce the height */
+  }
+
+  .video-frame {
+    height: 40vh;
+  }
+
+  .name-field,
+  .chat-input,
+  .chat-send {
+    font-size: 0.75rem;
+  }
+
+  .utils .audio,
+  .utils .novideo,
+  .utils .screenshare,
+  .utils .board-icon,
+  .utils .cutcall {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+}
