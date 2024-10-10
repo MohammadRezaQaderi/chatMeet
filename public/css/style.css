@@ -431,12 +431,12 @@ navbar .logo {
   cursor: pointer;
 }
 .container-room .left-cont .video-cont {
-  /* display: grid;
+  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-  grid-gap: 20px; */
-  display: flex;
+  grid-gap: 20px;
+  /* display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: wrap; */
   height: 75vh;
   padding: 20px;
   width: 100%;

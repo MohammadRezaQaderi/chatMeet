@@ -154,30 +154,22 @@ let myvideooff = document.querySelector("#myvideooff");
 myvideooff.style.visibility = "hidden";
 
 // const configuration = { iceServers: [{ urls: "stun:stun.stunprotocol.org" }] }
-
+const turnServerAddress = "156.253.5.46"; // Replace with your server's public IP or domain
+const turnSecret = "mysecret"; // The same secret from Coturn's config file
+const turnRealm = turnServerAddress;
 const configuration = {
   iceServers: [
-    { url: "stun:stun01.sipphone.com" },
-    { url: "stun:stun.ekiga.net" },
-    { url: "stun:stunserver.org" },
-    { url: "stun:stun.softjoys.com" },
-    { url: "stun:stun.voiparound.com" },
-    { url: "stun:stun.voipbuster.com" },
-    { url: "stun:stun.voipstunt.com" },
-    { url: "stun:stun.voxgratia.org" },
-    { url: "stun:stun.xten.com" },
     {
-      url: "turn:192.158.29.39:3478?transport=udp",
-      credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-      username: "28224511:1379330808",
+      urls: `stun:${turnServerAddress}:3478`, // Your Coturn STUN server
     },
     {
-      url: "turn:192.158.29.39:3478?transport=tcp",
-      credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-      username: "28224511:1379330808",
+      urls: `turn:${turnServerAddress}:3478`, // Your Coturn TURN server
+      username: 'mgh27', // Dynamic TURN username
+      credential: 'm2711gH9985', // Dynamic TURN credential
     },
   ],
 };
+
 
 const mediaConstraints = { video: true, audio: true };
 
