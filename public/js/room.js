@@ -153,19 +153,32 @@ mymuteicon.style.visibility = "hidden";
 let myvideooff = document.querySelector("#myvideooff");
 myvideooff.style.visibility = "hidden";
 
-// const configuration = { iceServers: [{ urls: "stun:stun.stunprotocol.org" }] }
-const turnServerAddress = "156.253.5.46"; // Replace with your server's public IP or domain
-const turnSecret = "mysecret"; // The same secret from Coturn's config file
-const turnRealm = turnServerAddress;
+
+function generateTurnCredentials(secret, realm) {
+  const unixTime = Math.floor(Date.now() / 1000) + 24 * 3600; // Valid for 24 hours
+  const username = `${unixTime}`; // Username is the expiry time
+  const hmac = CryptoJS.HmacSHA1(username, secret); // Generate HMAC using the secret
+  const credential = CryptoJS.enc.Base64.stringify(hmac); // Base64 encode the result
+  return { username, credential };
+}
+
+const turnServerAddress = "156.253.5.46"; // Your TURN server's public IP or domain
+const turnSecret = "mysecret"; // The shared secret from Coturn config
+const turnRealm = turnServerAddress; // The realm, same as Coturn server-name
+
+// Generate dynamic credentials
+const turnCredentials = generateTurnCredentials(turnSecret, turnRealm);
+
+// Updated WebRTC ICE Configuration
 const configuration = {
   iceServers: [
     {
-      urls: `stun:${turnServerAddress}:3478`, // Your Coturn STUN server
+      urls: `stun:${turnServerAddress}:3478`, // STUN server (non-secure)
     },
     {
-      urls: `turn:${turnServerAddress}:3478`, // Your Coturn TURN server
-      username: 'mgh27', // Dynamic TURN username
-      credential: 'm2711gH9985', // Dynamic TURN credential
+      urls: `turns:${turnServerAddress}:5349`, // Secure TURN server (over TLS)
+      username: turnCredentials.username, // Dynamic username
+      credential: turnCredentials.credential, // Dynamic credential
     },
   ],
 };
