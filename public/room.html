@@ -1,18 +1,22 @@
 <!DOCTYPE html>
-<html lang="fn" dir="rtl">
+<html lang="fa" dir="rtl"> <!-- Changed from "fn" to "fa" for Persian (Farsi) -->
 
 <head>
-    <meta charset="utf-8" lang="fn" dir="rtl">
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>اتاق جلسات</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <link rel="stylesheet" href="css/style.css">
     <script src="https://kit.fontawesome.com/6510466b6c.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
     <script>
         const params = new URLSearchParams(location.search);
-        if (!params.get("room")) location.href = "/";
+        if (!params.get("room") || !params.get("role")) {
+            location.href = "/";
+        }
     </script>
 </head>
 
@@ -20,25 +24,26 @@
     <div class="overlay" id="overlay">
         <div class="box">
             <div class="head-name">نام خود را وارد کنید</div>
-            <input type="text" class="name-field" placeholder="نام در جلسه..." id="name-field"></input><br>
+            <input type="text" class="name-field" placeholder="نام در جلسه..." id="name-field" autofocus>
+            <br>
             <button class="continue-name">ادامه</button>
-
         </div>
     </div>
+
     <div class="container-room">
         <div class="left-cont">
-
             <div class="video-cont-single" id="vcont">
                 <div class="video-box">
-                    <video class="video-frame" id="vd1" autoplay playsinline>
-                    </video>
+                    <video class="video-frame" id="vd1" autoplay playsinline></video>
                     <div class="nametag" id="myname">yourname</div>
                     <div class="mute-icon" id="mymuteicon"><i class="fas fa-microphone-slash"></i></div>
                     <div class="video-off" id="myvideooff">Video Off</div>
                 </div>
             </div>
 
-            <div class="whiteboard-cont"><canvas id="whiteboard" height="1000" width="1000"></canvas>
+            <!-- Whiteboard, initially hidden -->
+            <div class="whiteboard-cont hidden">
+                <canvas id="whiteboard" height="1000" width="1000"></canvas>
                 <div class="colors-cont">
                     <div class="black" onclick="setColor('black')"></div>
                     <div class="red" onclick="setColor('#e74c3c')"></div>
@@ -57,13 +62,8 @@
 
             <div class="footer">
                 <div class="utils">
-
-                    <div class="audio">
-                        <i class="fas fa-microphone"></i>
-                    </div>
-                    <div class="novideo">
-                        <i class="fas fa-video"></i>
-                    </div>
+                    <div class="audio"><i class="fas fa-microphone"></i></div>
+                    <div class="novideo"><i class="fas fa-video"></i></div>
                     <div class="screenshare tooltip">
                         <i class="fas fa-desktop"></i>
                         <span class="tooltiptext">اشتراک گذاری</span>
@@ -74,38 +74,25 @@
                     </div>
                     <div class="cutcall tooltip">
                         <i class="fas fa-phone-slash"></i>
-                        <span class="tooltiptext">ترک متن</span>
+                        <span class="tooltiptext">ترک جلسه</span>
                     </div>
-
-
                 </div>
-                <!-- <div class="copycode-cont">
-                    <div class="roomcode"></div>
-                    <button class="copycode-button" onclick="CopyClassText()">Copy Code</button>
-                </div> -->
             </div>
-
-
         </div>
 
         <div class="right-cont">
             <div class="head-title">
-
                 <div class="chats"><i class="fas fa-comment-alt mr-1"></i>چت</div>
-                <!-- <div class="attendies"><i class="fas fa-users mr-1"></i>شرکت کنند‌گان</div> -->
-
-
             </div>
 
-            <div class="chat-cont">
-
-            </div>
+            <div class="chat-cont"></div>
             <div class="chat-input-cont">
                 <div class="ci-cont"><input type="text" class="chat-input" placeholder="پیام..."></div>
                 <div class="ci-send"><button class="chat-send">ارسال</button></div>
             </div>
         </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/room.js"></script>
 </body>
