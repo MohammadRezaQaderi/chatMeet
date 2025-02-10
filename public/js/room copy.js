@@ -1,10 +1,9 @@
 const socket = io.connect("https://meet.daarolquran.com");
-const myvideo = document.querySelector("#vd1");
-const urlParams = new URLSearchParams(window.location.search);
-const roomid = urlParams.get("room");
-let name = urlParams.get("name");
-const role = urlParams.get("role");
-let username;
+const params = new URLSearchParams(location.search);
+const roomid = params.get("room");
+const role = params.get("role");
+let username = params.get("name");
+
 const chatRoom = document.querySelector(".chat-cont");
 const sendButton = document.querySelector(".chat-send");
 const messageField = document.querySelector(".chat-input");
@@ -17,11 +16,34 @@ const audioButt = document.querySelector(".audio");
 const cutCall = document.querySelector(".cutcall");
 const screenShareButt = document.querySelector(".screenshare");
 const whiteboardButt = document.querySelector(".board-icon");
-
-//whiteboard js start
+const myvideo = document.querySelector("#vd1");
+const mymuteicon = document.querySelector("#mymuteicon");
+const myvideooff = document.querySelector("#myvideooff");
 const whiteboardCont = document.querySelector(".whiteboard-cont");
 const canvas = document.querySelector("#whiteboard");
 const ctx = canvas.getContext("2d");
+
+if (!roomid) location.href = "/";
+
+let videoAllowed = role === "teacher";
+let audioAllowed = role === "teacher";
+
+mymuteicon.style.visibility = audioAllowed ? "hidden" : "visible";
+myvideooff.style.visibility = videoAllowed ? "hidden" : "visible";
+
+if (username) {
+  overlayContainer.style.visibility = "hidden";
+  document.querySelector("#myname").innerHTML = `${username} (You)`;
+  socket.emit("join room", roomid, username, role);
+} else {
+  continueButt.addEventListener("click", () => {
+    if (nameField.value === "") return;
+    username = nameField.value;
+    overlayContainer.style.visibility = "hidden";
+    document.querySelector("#myname").innerHTML = `${username} (You)`;
+    socket.emit("join room", roomid, username, role);
+  });
+}
 
 let boardVisisble = false;
 
@@ -40,6 +62,18 @@ function fitToContainer(canvas) {
   canvas.style.height = "100%";
   canvas.width = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
+}
+
+const mediaConstraints = {
+  video: videoAllowed,
+  audio: audioAllowed,
+};
+
+if (role === "student") {
+  videoButt.style.opacity = "0.5";
+  videoButt.style.pointerEvents = "none";
+  audioButt.style.opacity = "0.5";
+  audioButt.style.pointerEvents = "none";
 }
 
 fitToContainer(canvas);
@@ -140,36 +174,29 @@ socket.on("draw", (newX, newY, prevX, prevY, color, size) => {
   drawRemote(newX, newY, prevX, prevY);
 });
 
-//whiteboard js end
-
-let videoAllowed = role === "teacher";
-let audioAllowed = true;
-
 let micInfo = {};
 let videoInfo = {};
 
 let videoTrackReceived = {};
-let videoTrackSent = {};
-let audioTrackSent = {};
-mymuteicon.style.visibility = audioAllowed ? "hidden" : "visible";
-myvideooff.style.visibility = videoAllowed ? "hidden" : "visible";
 
-function generateTurnCredentials(secret, realm, roomid) {
-  // Use roomid as part of the username, making the credentials unique for each room
+mymuteicon.style.visibility = "hidden";
+
+myvideooff.style.visibility = "hidden";
+
+function generateTurnCredentials(secret, realm) {
   const unixTime = Math.floor(Date.now() / 1000) + 24 * 3600; // Valid for 24 hours
-  const username = `${roomid}_${unixTime}`; // Username is room ID with expiry time
+  const username = `${unixTime}`; // Username is the expiry time
   const hmac = CryptoJS.HmacSHA1(username, secret); // Generate HMAC using the secret
   const credential = CryptoJS.enc.Base64.stringify(hmac); // Base64 encode the result
   return { username, credential };
 }
 
-// Use the current room's unique ID
-const turnServerAddress = "156.253.5.46"; // TURN server's public IP or domain
+const turnServerAddress = "156.253.5.46"; // Your TURN server's public IP or domain
 const turnSecret = "mysecret"; // The shared secret from Coturn config
 const turnRealm = turnServerAddress; // The realm, same as Coturn server-name
 
-// Generate dynamic credentials based on room ID
-const turnCredentials = generateTurnCredentials(turnSecret, turnRealm, roomid);
+// Generate dynamic credentials
+const turnCredentials = generateTurnCredentials(turnSecret, turnRealm);
 
 // Updated WebRTC ICE Configuration
 const configuration = {
@@ -179,35 +206,20 @@ const configuration = {
     },
     {
       urls: `turns:${turnServerAddress}:5349`, // Secure TURN server (over TLS)
-      username: turnCredentials.username, // Dynamic username for the current room
-      credential: turnCredentials.credential, // Dynamic credential for the current room
+      username: turnCredentials.username, // Dynamic username
+      credential: turnCredentials.credential, // Dynamic credential
     },
   ],
 };
 
-console.log("Generated TURN credentials for room:", roomid, turnCredentials);
-
-
-if (role === "student") {
-  videoButt.style.visibility = "hidden";
-  screenShareButt.style.visibility = "hidden";
-  whiteboardButt.style.visibility = "hidden";
-  videoButt.style.opacity = "0.5";
-  videoButt.style.pointerEvents = "none";
-} else {
-  videoButt.style.visibility = "visible";
-  videoButt.style.opacity = "1";
-  videoButt.style.pointerEvents = "auto";
-}
-
-const mediaConstraints = {
-  video: videoAllowed,
-  audio: audioAllowed,
-};
-
 let connections = {};
 let cName = {};
+let audioTrackSent = {};
+let videoTrackSent = {};
+
 let mystream, myscreenshare;
+
+// document.querySelector(".roomcode").innerHTML = `${roomid}`;
 
 function CopyClassText() {
   var textToCopy = document.querySelector(".roomcode");
@@ -241,7 +253,7 @@ continueButt.addEventListener("click", () => {
   username = nameField.value;
   overlayContainer.style.visibility = "hidden";
   document.querySelector("#myname").innerHTML = `${username} (You)`;
-  socket.emit("join room", roomid, username, role); // Pass the role to the server
+  socket.emit("join room", roomid, username);
 });
 
 nameField.addEventListener("keyup", function (event) {
@@ -284,42 +296,25 @@ function reportError(e) {
 }
 
 function startCall() {
-  const constraints = {
-    audio: audioAllowed,
-    video: videoAllowed,
-  };
-
   navigator.mediaDevices
-    .getUserMedia(constraints)
+    .getUserMedia(mediaConstraints)
     .then((localStream) => {
       myvideo.srcObject = localStream;
       myvideo.muted = true;
+
       if (role === "student") {
         localStream.getTracks().forEach((track) => {
-          console.log({ track });
-
-          if (track.kind === "audio") {
-            track.enabled = false;
-          }
+          if (track.kind === "video") track.enabled = false;
+          if (track.kind === "audio") track.enabled = false;
         });
       }
-      localStream.getTracks().forEach((track) => {
-        if (track.kind === "video" && role === "student") {
-          track.enabled = false;
-        }
-        for (let key in connections) {
-          connections[key].addTrack(track, localStream); // Ensure this line is adding the track to each connection
-          if (track.kind === "audio") audioTrackSent[key] = track;
-          else videoTrackSent[key] = track;
-        }
-      });
     })
-    .catch(handleGetUserMediaError);
+    .catch(console.error);
 }
 
 function handleVideoOffer(offer, sid, cname, micinf, vidinf) {
   cName[sid] = cname;
-  console.log("video offered recevied", cName, sid, cname);
+  console.log("video offered recevied");
   micInfo[sid] = micinf;
   videoInfo[sid] = vidinf;
   connections[sid] = new RTCPeerConnection(configuration);
@@ -333,6 +328,7 @@ function handleVideoOffer(offer, sid, cname, micinf, vidinf) {
 
   connections[sid].ontrack = function (event) {
     if (!document.getElementById(sid)) {
+      console.log("track event fired");
       let vidCont = document.createElement("div");
       let newvideo = document.createElement("video");
       let name = document.createElement("div");
@@ -348,12 +344,11 @@ function handleVideoOffer(offer, sid, cname, micinf, vidinf) {
       muteIcon.innerHTML = `<i class="fas fa-microphone-slash"></i>`;
       videoOff.innerHTML = "Video Off";
       vidCont.classList.add("video-box");
-
-      newvideo.classList.add("video-frame");
+      newvideo.classList.add("video-frame2");
       newvideo.autoplay = true;
       newvideo.playsinline = true;
       newvideo.id = `video${sid}`;
-      newvideo.srcObject = event.streams[0]; // Make sure the video stream from the teacher is set here
+      newvideo.srcObject = event.streams[0];
 
       if (micInfo[sid] == "on") muteIcon.style.visibility = "hidden";
       else muteIcon.style.visibility = "visible";
@@ -434,58 +429,18 @@ function handleVideoAnswer(answer, sid) {
   connections[sid].setRemoteDescription(ans);
 }
 
-//(https://github.com/miroslavpejic85)
+//Thanks to (https://github.com/miroslavpejic85) for ScreenShare Code
 
 screenShareButt.addEventListener("click", () => {
-  screenShareToggle();
-});
-
-let screenshareEnabled = false;
-
-function screenShareToggle() {
-  let screenMediaPromise;
-  if (!screenshareEnabled) {
-    if (navigator.getDisplayMedia) {
-      screenMediaPromise = navigator.getDisplayMedia({ video: true });
-    } else if (navigator.mediaDevices.getDisplayMedia) {
-      screenMediaPromise = navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
-    } else {
-      screenMediaPromise = navigator.mediaDevices.getUserMedia({
-        video: { mediaSource: "screen" },
-      });
-    }
-  } else {
-    screenMediaPromise = navigator.mediaDevices.getUserMedia({ video: true });
-  }
-  screenMediaPromise
-    .then((myscreenshare) => {
-      screenshareEnabled = !screenshareEnabled;
-      for (let key in connections) {
-        const sender = connections[key]
-          .getSenders()
-          .find((s) => (s.track ? s.track.kind === "video" : false));
-        sender.replaceTrack(myscreenshare.getVideoTracks()[0]);
-      }
-      myscreenshare.getVideoTracks()[0].enabled = true;
-      const newStream = new MediaStream([myscreenshare.getVideoTracks()[0]]);
-      myvideo.srcObject = newStream;
-      myvideo.muted = true;
-      mystream = newStream;
-      screenShareButt.innerHTML = screenshareEnabled
-        ? `<i class="fas fa-desktop"></i><span class="tooltiptext">Stop Share Screen</span>`
-        : `<i class="fas fa-desktop"></i><span class="tooltiptext">Share Screen</span>`;
-      myscreenshare.getVideoTracks()[0].onended = function () {
-        if (screenshareEnabled) screenShareToggle();
-      };
+  navigator.mediaDevices
+    .getDisplayMedia({ video: true })
+    .then((stream) => {
+      let videoTrack = stream.getVideoTracks()[0];
+      myvideo.srcObject = new MediaStream([videoTrack]);
+      socket.emit("screen share", roomid);
     })
-    .catch((e) => {
-      alert("Unable to share screen:" + e.message);
-      console.error(e);
-    });
-}
-
+    .catch(console.error);
+});
 socket.on("video-offer", handleVideoOffer);
 
 socket.on("new icecandidate", handleNewIceCandidate);
@@ -599,94 +554,40 @@ sendButton.addEventListener("click", () => {
   socket.emit("message", msg, username, roomid);
 });
 
-messageField.addEventListener("keyup", function (event) {
-  if (event.keyCode === 13) {
-    event.preventDefault();
-    sendButton.click();
-  }
+messageField.addEventListener("keyup", (event) => {
+  if (event.keyCode === 13) sendButton.click();
 });
 
 socket.on("message", (msg, sendername, time) => {
-  chatRoom.scrollTop = chatRoom.scrollHeight;
   chatRoom.innerHTML += `<div class="message">
-    <div class="info">
-        <div class="username">${sendername}</div>
-        <div class="time">${time}</div>
-    </div>
-    <div class="content">
-        ${msg}
-    </div>
-</div>`;
+      <div class="info">
+          <div class="username">${sendername}</div>
+          <div class="time">${time}</div>
+      </div>
+      <div class="content">${msg}</div>
+  </div>`;
 });
 
 videoButt.addEventListener("click", () => {
-  if (videoAllowed) {
-    for (let key in videoTrackSent) {
-      videoTrackSent[key].enabled = false;
-    }
-    videoButt.innerHTML = `<i class="fas fa-video-slash"></i>`;
-    videoAllowed = false;
-    videoButt.style.backgroundColor = "#b12c2c";
-    if (mystream) {
-      mystream.getTracks().forEach((track) => {
-        if (track.kind === "video") {
-          track.enabled = false;
-        }
-      });
-    }
-
-    myvideooff.style.visibility = "visible";
-    socket.emit("action", "videooff");
-  } else {
-    for (let key in videoTrackSent) {
-      videoTrackSent[key].enabled = true;
-    }
-    videoButt.innerHTML = `<i class="fas fa-video"></i>`;
-    videoAllowed = true;
-    videoButt.style.backgroundColor = "#4ECCA3";
-    if (mystream) {
-      mystream.getTracks().forEach((track) => {
-        if (track.kind === "video") track.enabled = true;
-      });
-    }
-
-    myvideooff.style.visibility = "hidden";
-    socket.emit("action", "videoon");
-  }
+  if (!videoAllowed) return;
+  const enabled = myvideo.srcObject.getVideoTracks()[0].enabled;
+  myvideo.srcObject.getVideoTracks()[0].enabled = !enabled;
+  videoButt.innerHTML = enabled
+    ? `<i class="fas fa-video-slash"></i>`
+    : `<i class="fas fa-video"></i>`;
+  myvideooff.style.visibility = enabled ? "visible" : "hidden";
+  socket.emit("action", enabled ? "videooff" : "videoon");
 });
 
 audioButt.addEventListener("click", () => {
-  if (audioAllowed) {
-    for (let key in audioTrackSent) {
-      audioTrackSent[key].enabled = false;
-    }
-    audioButt.innerHTML = `<i class="fas fa-microphone-slash"></i>`;
-    audioAllowed = false;
-    audioButt.style.backgroundColor = "#b12c2c";
-    if (mystream) {
-      mystream.getTracks().forEach((track) => {
-        if (track.kind === "audio") track.enabled = false;
-      });
-    }
-
-    mymuteicon.style.visibility = "visible";
-    socket.emit("action", "mute");
-  } else {
-    for (let key in audioTrackSent) {
-      audioTrackSent[key].enabled = true;
-    }
-    audioButt.innerHTML = `<i class="fas fa-microphone"></i>`;
-    audioAllowed = true;
-    audioButt.style.backgroundColor = "#4ECCA3";
-    if (mystream) {
-      mystream.getTracks().forEach((track) => {
-        if (track.kind === "audio") track.enabled = true;
-      });
-    }
-
-    mymuteicon.style.visibility = "hidden";
-    socket.emit("action", "unmute");
-  }
+  if (!audioAllowed) return;
+  const enabled = myvideo.srcObject.getAudioTracks()[0].enabled;
+  myvideo.srcObject.getAudioTracks()[0].enabled = !enabled;
+  audioButt.innerHTML = enabled
+    ? `<i class="fas fa-microphone-slash"></i>`
+    : `<i class="fas fa-microphone"></i>`;
+  mymuteicon.style.visibility = enabled ? "visible" : "hidden";
+  socket.emit("action", enabled ? "mute" : "unmute");
 });
 
 socket.on("action", (msg, sid) => {
@@ -710,15 +611,11 @@ socket.on("action", (msg, sid) => {
 });
 
 whiteboardButt.addEventListener("click", () => {
-  if (boardVisisble) {
-    whiteboardCont.style.visibility = "hidden";
-    boardVisisble = false;
-  } else {
-    whiteboardCont.style.visibility = "visible";
-    boardVisisble = true;
-  }
+  document.querySelector(".whiteboard-cont").classList.toggle("hidden");
 });
 
 cutCall.addEventListener("click", () => {
   location.href = "https://daarolquran.com/";
 });
+
+startCall();

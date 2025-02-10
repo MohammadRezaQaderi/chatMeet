@@ -29,7 +29,9 @@
 
         const role = params.get("role");
         if (role === "student") {
-          document.getElementById("mymuteicon1").style.display = "none"; // Hide the mute icon
+          document.getElementById("vcont").style.display = "none"; // Hide the video container
+          document.getElementById("myvideooff").style.display = "none"; // Hide the "Video Off" button
+          document.getElementById("mymuteicon").style.display = "none"; // Hide the mute icon
           document.getElementById("student-message").style.display = "block"; // Show the message for students
         }
       });
@@ -61,14 +63,7 @@
             <div class="video-off" id="myvideooff">Video Off</div>
           </div>
         </div>
-        <!-- <div class="video-cont-single" id="vcont1">
-          <div class="video-box">
-            <div class="nametag" id="myname1">yourname</div>
-            <div class="mute-icon" id="mymuteicon1">
-              <i class="fas fa-microphone-slash"></i>
-            </div>
-          </div>
-        </div> -->
+
         <div class="whiteboard-cont">
           <canvas id="whiteboard" height="1000" width="1000"></canvas>
           <div class="colors-cont">

@@ -9,6 +9,11 @@
   font-family: "Open Sans", sans-serif;
 }
 
+video {
+  object-fit: none;
+  overflow: hidden; 
+}
+
 .mr-1 {
   margin-right: 10px;
 }
@@ -377,6 +382,7 @@ navbar .logo {
   background-color: #3498db;
   margin-top: 10px;
 }
+
 .container-room .left-cont .whiteboard-cont .colors-cont .blue:hover {
   cursor: pointer;
 }
@@ -456,8 +462,8 @@ navbar .logo {
 
 .container-room .left-cont .video-box .video-frame {
   background-color: #353b48;
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  height: 80%;
   object-fit: cover;
   border-radius: 5px;
 }
@@ -497,9 +503,9 @@ navbar .logo {
 }
 .container-room .left-cont .video-cont .video-box .video-frame {
   background-color: #353b48;
-  height: 100%;
+  height: 80%;
   min-height: 200px;
-  width: 100%;
+  width: 80%;
   object-fit: cover;
   border-radius: 5px;
 }
