@@ -2,7 +2,7 @@ const path = require("path");
 const express = require("express");
 const http = require("http");
 const socketio = require("socket.io");
-const moment = require("moment-jalaali"); // Import moment-jalaali
+const moment = require("moment"); // Import moment-jalaali
 const PORT = process.env.PORT || 9999;
 
 const app = express();
